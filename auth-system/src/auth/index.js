@@ -1,2 +1,2 @@
-export { signup, login, refresh, logout } from "./services/auth.service.js";
+export { signup, login, refresh, logout,logoutAll } from "./services/auth.service.js";
 

@@ -64,4 +64,7 @@ export const sessions = pgTable("sessions", {
     userId: integer("user_id").notNull(),
     refreshToken: text("refresh_token").notNull(),
     expiresAt: timestamp("expires_at"),
+    ip:text("ip"),
+    userAgent:text("user_agent"),
+    expiresAt :timestamp("expires_at"),
 });

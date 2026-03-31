@@ -13,7 +13,8 @@ import {
 import {
     createSession,
     findSession,
-    deleteSession
+    deleteSession,
+    deleteAllSessionsByUserId
 } from "../repositories/session.repo.js";
 
 import { hashPassword, comparePassword } from "./hash.service.js";
@@ -31,7 +32,7 @@ const REFRESH_TOKEN_EXPIRY = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 
 // ================= SIGNUP =================
-export const signup = async ({ username, email, password }) => {
+export const signup = async ({ username, email, password, ip, userAgent }) => {
     // check username
     const existingUser = await findUserByUsername(username);
     if (existingUser) throw new Error("Username already taken");
@@ -63,6 +64,8 @@ export const signup = async ({ username, email, password }) => {
     await createSession({
         userId: user.id,
         refreshToken,
+        ip,
+        userAgent,
         expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY),
     });
 
@@ -71,7 +74,7 @@ export const signup = async ({ username, email, password }) => {
 
 
 // ================= LOGIN =================
-export const login = async ({ identifier, password }) => {
+export const login = async ({ identifier, password, ip, userAgent }) => {
     const type = detectIdentifierType(identifier);
 
     let account;
@@ -110,15 +113,16 @@ export const login = async ({ identifier, password }) => {
     await createSession({
         userId: user.id,
         refreshToken,
+        ip,
+        userAgent,
         expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY),
     });
-
     return { accessToken, refreshToken };
 };
 
 
 // ================= REFRESH =================
-export const refresh = async (refreshToken) => {
+export const refresh = async (refreshToken, ip, userAgent) => {
     const session = await findSession(refreshToken);
     if (!session) throw new Error("Invalid refresh token");
 
@@ -136,6 +140,8 @@ export const refresh = async (refreshToken) => {
     await createSession({
         userId: session.userId,
         refreshToken: newRefresh,
+        ip,
+        userAgent,
         expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY),
     });
 
@@ -151,4 +157,9 @@ export const refresh = async (refreshToken) => {
 export const logout = async (refreshToken) => {
     await deleteSession(refreshToken);
     return { message: "Logged out" };
+};
+// ================= LOGOUT All =================
+export const logoutAll = async (userId) => {
+  await deleteAllSessionsByUserId(userId);
+  return { message: "Logged out from all devices" };
 };

@@ -19,3 +19,7 @@ export const findSession = async (token) => {
 export const deleteSession = async (token) => {
   return db.delete(sessions).where(eq(sessions.refreshToken, token));
 };
+
+export const deleteAllSessionsByUserId = async (userId) =>{
+  return db.delete(sessions).where(eq(sessions.userId,userId));
+};
