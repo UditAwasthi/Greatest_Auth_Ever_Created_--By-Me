@@ -54,6 +54,7 @@ export const verifications = pgTable("verifications", {
     identifier: text("identifier").notNull(),
     type: text("type"),
     code: text("code").notNull(),
+    purpose: text("purpose").notNull(), 
     expiresAt: timestamp("expires_at"),
 });
 
