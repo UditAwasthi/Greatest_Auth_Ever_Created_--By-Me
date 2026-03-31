@@ -16,7 +16,8 @@ import {
 
 import {
   generateAccessToken,
-  generateRefreshToken
+  generateRefreshToken,
+  hashToken
 } from "./token.service.js";
 
 const REFRESH_TOKEN_EXPIRY = 1000 * 60 * 60 * 24 * 7;
@@ -52,10 +53,10 @@ export const loginWithOTP = async ({ identifier, otp, ip, userAgent }) => {
 
   // 3. session
   const refreshToken = generateRefreshToken();
-
+  const hashed = hashToken(refreshToken);
   await createSession({
     userId: user.id,
-    refreshToken,
+    refreshToken:hashed,
     ip,
     userAgent,
     expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY),

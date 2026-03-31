@@ -21,7 +21,8 @@ import { hashPassword, comparePassword } from "./hash.service.js";
 
 import {
     generateAccessToken,
-    generateRefreshToken
+    generateRefreshToken,
+    hashToken
 } from "./token.service.js";
 
 import { detectIdentifierType } from "../utils/identifier.util.js";
@@ -59,11 +60,11 @@ export const signup = async ({ username, email, password, ip, userAgent }) => {
     // tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken();
-
+    const hashedR = hashToken(refreshToken);
     // session
     await createSession({
         userId: user.id,
-        refreshToken,
+        refreshToken: hashedR,
         ip,
         userAgent,
         expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY),
@@ -109,10 +110,11 @@ export const login = async ({ identifier, password, ip, userAgent }) => {
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken();
-
+    const hashedR = hashToken(refreshToken);
+    // session
     await createSession({
         userId: user.id,
-        refreshToken,
+        refreshToken: hashedR,
         ip,
         userAgent,
         expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY),
@@ -123,7 +125,9 @@ export const login = async ({ identifier, password, ip, userAgent }) => {
 
 // ================= REFRESH =================
 export const refresh = async (refreshToken, ip, userAgent) => {
-    const session = await findSession(refreshToken);
+    const hashed = hashToken(refreshToken);
+
+    const session = await findSession(hashed);
     if (!session) throw new Error("Invalid refresh token");
 
     // expiry check
@@ -136,10 +140,11 @@ export const refresh = async (refreshToken, ip, userAgent) => {
     await deleteSession(refreshToken);
 
     const newRefresh = generateRefreshToken();
+    const newHashed = hashToken(newRefresh);
 
     await createSession({
         userId: session.userId,
-        refreshToken: newRefresh,
+        refreshToken: newHashed, 
         ip,
         userAgent,
         expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY),
@@ -155,11 +160,12 @@ export const refresh = async (refreshToken, ip, userAgent) => {
 
 // ================= LOGOUT =================
 export const logout = async (refreshToken) => {
-    await deleteSession(refreshToken);
+    const hashed = hashToken(refreshToken);
+    await deleteSession(hashed);
     return { message: "Logged out" };
 };
 // ================= LOGOUT All =================
 export const logoutAll = async (userId) => {
-  await deleteAllSessionsByUserId(userId);
-  return { message: "Logged out from all devices" };
+    await deleteAllSessionsByUserId(userId);
+    return { message: "Logged out from all devices" };
 };
